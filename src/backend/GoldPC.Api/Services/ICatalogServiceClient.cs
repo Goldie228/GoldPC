@@ -18,9 +18,10 @@ public interface ICatalogServiceClient
     /// <param name="pageSize">Размер страницы.</param>
     /// <param name="category">Slug категории для фильтрации (или <c>null</c> для всех).</param>
     /// <param name="isActive">Фильтр по статусу активности (или <c>null</c> для всех).</param>
+    /// <param name="hasImages">Фильтр по наличию картинок (или <c>null</c> для всех).</param>
     /// <param name="search">Поисковый запрос по названию товара.</param>
     /// <returns>Постраничный результат со списком товаров.</returns>
-    Task<PagedResult<ProductListDto>> GetProductsAsync(int page, int pageSize, string? category, bool? isActive, string? search = null);
+    Task<PagedResult<ProductListDto>> GetProductsAsync(int page, int pageSize, string? category, bool? isActive, bool? hasImages = null, string? search = null);
 
     /// <summary>
     /// Получает детальную информацию о товаре по идентификатору.

@@ -74,6 +74,10 @@ export default defineConfig({
         target: 'http://localhost:5004',
         changeOrigin: true,
       },
+      '/api/v1/Warranty': {
+        target: 'http://localhost:5004',
+        changeOrigin: true,
+      },
       '/hubs/chat': {
         target: 'http://localhost:5003',
         changeOrigin: true,

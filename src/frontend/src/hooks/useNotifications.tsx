@@ -2,6 +2,7 @@ import { useEffect, useCallback, useState, createContext, useContext } from 'rea
 import * as signalR from '@microsoft/signalr';
 import { useAuthStore } from '../store/authStore';
 import { useToastStore } from '../store/toastStore';
+import { isAccessTokenValid } from '../utils/token';
 import { getUserNotifications, markAsRead as apiMarkAsRead, markAllAsRead as apiMarkAllAsRead, deleteNotification as apiDeleteNotification } from '../api/notifications';
 
 // ── Типы ────────────────────────────────────────────────────────
@@ -120,7 +121,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
 
     const token = getAccessToken();
-    if (!token) {
+    // Токен отсутствует или истёк — не дёргаем API/SignalR (иначе 401)
+    if (token == null || token === '' || !isAccessTokenValid()) {
       setConnectionStatus('disconnected');
       return;
     }

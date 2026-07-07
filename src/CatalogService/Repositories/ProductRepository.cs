@@ -73,6 +73,23 @@ public class ProductRepository : IProductRepository
             .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
     }
 
+    /// <summary>
+    /// Получить детальный товар по ID без фильтра IsActive (для админки).
+    /// </summary>
+    public async Task<Product?> GetDetailByIdAdminAsync(Guid id)
+    {
+        return await _readContext.Products
+            .Include(p => p.Category)
+            .Include(p => p.Manufacturer)
+            .Include(p => p.Images.OrderBy(i => i.SortOrder))
+            .Include(p => p.SpecificationValues)
+                .ThenInclude(s => s.Attribute)
+            .Include(p => p.SpecificationValues)
+                .ThenInclude(s => s.CanonicalValue)
+            .Include(p => p.Reviews.Where(r => r.IsVerified).OrderByDescending(r => r.CreatedAt))
+            .FirstOrDefaultAsync(p => p.Id == id);
+    }
+
     public async Task<Product?> GetDetailBySlugAsync(string slug)
     {
         return await _readContext.Products
@@ -255,6 +272,16 @@ public class ProductRepository : IProductRepository
         if (filter.IsActive.HasValue)
         {
             query = query.Where(p => p.IsActive == filter.IsActive.Value);
+        }
+
+        // Фильтрация по наличию реальных картинок (с локально сохранённым Path, без placeholder)
+        if (filter.HasImages == true)
+        {
+            query = query.Where(p => p.Images.Any(i => !string.IsNullOrWhiteSpace(i.Path) && !i.Path.Contains("placeholders")));
+        }
+        else if (filter.HasImages == false)
+        {
+            query = query.Where(p => !p.Images.Any(i => !string.IsNullOrWhiteSpace(i.Path) && !i.Path.Contains("placeholders")));
         }
 
         // Фильтрация по ID категории
@@ -764,20 +791,23 @@ public class ProductRepository : IProductRepository
 
     public async Task DeleteAsync(Guid id)
     {
-        var product = await GetByIdAsync(id);
+        // Используем write context напрямую, без фильтра IsActive —
+        // иначе неактивные товары (созданные через CreateProduct и помеченные isActive=false)
+        // нельзя удалить, потому что GetByIdAsync возвращает null.
+        // Hard delete: товар полностью удаляется из БД (для админки).
+        var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
         if (product != null)
         {
-            product.IsActive = false;
-            product.UpdatedAt = DateTime.UtcNow;
+            _context.Products.Remove(product);
             await _context.SaveChangesAsync();
-            
-            _logger.LogInformation("Soft deleted product {ProductId}", id);
+
+            _logger.LogInformation("Hard deleted product {ProductId}", id);
         }
     }
 
     public async Task<bool> ExistsAsync(Guid id)
     {
-        return await _context.Products.AnyAsync(p => p.Id == id && p.IsActive);
+        return await _context.Products.AnyAsync(p => p.Id == id);
     }
 
     public async Task<bool> SkuExistsAsync(string sku, Guid? excludeId = null)

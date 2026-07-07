@@ -63,13 +63,13 @@ public class ServicesController : ControllerBase
     }
 
     [HttpGet("my")]
-    public async Task<IActionResult> GetMyRequests([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    public async Task<IActionResult> GetMyRequests([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] ServiceRequestStatus? status = null)
     {
         var userId = GetCurrentUserId();
         if (userId == null)
             return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
 
-        var result = await _servicesService.GetByClientIdAsync(userId.Value, page, pageSize);
+        var result = await _servicesService.GetByClientIdAsync(userId.Value, page, pageSize, status);
         return Ok(ApiResponse<PagedResultServiceRequest>.Ok(result));
     }
 

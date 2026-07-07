@@ -52,9 +52,10 @@ public class AdminProductsController : ControllerBase
         [FromQuery] int pageSize = 10,
         [FromQuery] string? category = null,
         [FromQuery] bool? isActive = null,
+        [FromQuery] bool? hasImages = null,
         [FromQuery] string? search = null)
     {
-        var result = await _catalogClient.GetProductsAsync(page, pageSize, category, isActive, search);
+        var result = await _catalogClient.GetProductsAsync(page, pageSize, category, isActive, hasImages, search);
         return Ok(result);
     }
 
@@ -87,7 +88,27 @@ public class AdminProductsController : ControllerBase
         if (string.IsNullOrWhiteSpace(create.Category))
             return BadRequest(new { error = "Категория обязательна" });
 
-        var product = await _catalogClient.CreateProductAsync(create);
+        SK.ProductDetailDto product;
+        try
+        {
+            product = await _catalogClient.CreateProductAsync(create);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Ошибка вызова CatalogService при создании товара");
+            return StatusCode(502, new { error = "Сервис каталога временно недоступен" });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogError(ex, "Ошибка при создании товара в CatalogService");
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Неожиданная ошибка при создании товара");
+            return StatusCode(500, new { error = "Внутренняя ошибка сервера" });
+        }
+
         var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "unknown";
         var currentUserName = User.Identity?.Name ?? "unknown";
         var currentUserEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "unknown";

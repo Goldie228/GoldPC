@@ -37,6 +37,15 @@ const sessionStorageMock = (() => {
 })();
 
 Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock });
+
+/** Генерирует валидный JWT, который ещё не истёк (через час) */
+function makeValidJwt(): string {
+  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const payload = btoa(
+    JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600, sub: 'user-1' }),
+  );
+  return `${header}.${payload}.signature`;
+}
 Object.defineProperty(globalThis, 'sessionStorage', { value: sessionStorageMock });
 
 describe('wishlistStore', () => {
@@ -161,7 +170,7 @@ describe('wishlistStore', () => {
         'server-item-1',
         'server-item-2',
       ]);
-      localStorageMock.setItem('accessToken', 'token');
+      localStorageMock.setItem('accessToken', makeValidJwt());
 
       useWishlistStore.setState({ items: ['local-item'] });
       await useWishlistStore.getState().syncWithServer();
@@ -185,7 +194,7 @@ describe('wishlistStore', () => {
       (wishlistApi.sync as ReturnType<typeof vi.fn>).mockRejectedValue({
         response: { status: 401 },
       });
-      localStorageMock.setItem('accessToken', 'token');
+      localStorageMock.setItem('accessToken', makeValidJwt());
 
       useWishlistStore.setState({ items: ['local-item'] });
       await useWishlistStore.getState().syncWithServer();
@@ -198,7 +207,7 @@ describe('wishlistStore', () => {
       (wishlistApi.sync as ReturnType<typeof vi.fn>).mockRejectedValue(
         new Error('Network error'),
       );
-      localStorageMock.setItem('accessToken', 'token');
+      localStorageMock.setItem('accessToken', makeValidJwt());
 
       useWishlistStore.setState({ items: ['local-item'] });
       await useWishlistStore.getState().syncWithServer();

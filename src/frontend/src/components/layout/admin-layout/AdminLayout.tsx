@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Outlet, NavLink, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ToastContainer } from '@/components/ui/Toast';
 import {
   Users,
   Package,
@@ -209,6 +210,9 @@ export function AdminLayout() {
           <Outlet />
         </main>
       </div>
+
+      {/* Toast-уведомления (общий стор) */}
+      <ToastContainer />
     </div>
   );
 }

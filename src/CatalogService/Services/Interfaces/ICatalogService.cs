@@ -12,6 +12,7 @@ public interface ICatalogService
     Task<PagedResult<ProductListDto>> GetProductsAsync(ProductFilterDto filter);
     Task<PagedResult<ProductListDto>> GetAdminProductsAsync(ProductFilterDto filter);
     Task<ProductDetailDto?> GetProductByIdAsync(Guid id);
+    Task<ProductDetailDto?> GetAdminProductByIdAsync(Guid id);
     Task<ProductDetailDto?> GetProductBySlugAsync(string slug);
     Task<ProductDetailDto?> GetProductBySkuAsync(string sku);
     Task<ProductDetailDto> CreateProductAsync(CreateProductDto dto);

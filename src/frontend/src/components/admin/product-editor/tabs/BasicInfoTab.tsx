@@ -9,6 +9,7 @@ import type { ProductEditForm } from '../types';
 import type { ProductCategory } from '@/api/types';
 import { catalogAdminApi } from '@/api/admin';
 import { CATEGORY_LABELS, CATEGORY_ORDER } from '@/utils/category-mappings';
+import { getPriceError, getStockError, parsePriceSafe, parseStockSafe } from '@/utils/productValidation';
 
 interface BasicInfoTabProps {
   form: ProductEditForm;
@@ -100,18 +101,32 @@ export function BasicInfoTab({ form, onChange }: BasicInfoTabProps) {
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
           <label htmlFor="pe-price" className="text-sm font-medium text-muted-foreground">
-            Цена (BYN)
+            Цена (BYN) <span className="text-price-rise">*</span>
           </label>
           <input
             id="pe-price"
             type="number"
             min={0}
             step="0.01"
-            className="bg-surface-card border border-hairline-dark rounded-md px-3 py-2 text-sm text-body-text placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors"
+            inputMode="decimal"
+            className={`bg-surface-card border rounded-md px-3 py-2 text-sm text-body-text placeholder:text-muted-foreground outline-none transition-colors ${
+              getPriceError(String(form.price), { required: true })
+                ? 'border-price-rise focus:border-price-rise focus:ring-1 focus:ring-price-rise'
+                : 'border-hairline-dark focus:border-gold focus:ring-1 focus:ring-gold'
+            }`}
             placeholder="0"
             value={form.price}
-            onChange={(e) => onChange('price', parseFloat(e.target.value) || 0)}
+            onChange={(e) => {
+              const raw = e.target.value;
+              if (raw.startsWith('-')) return;
+              onChange('price', raw === '' ? 0 : parsePriceSafe(raw));
+            }}
           />
+          {getPriceError(String(form.price), { required: true }) && (
+            <p className="text-xs text-price-rise">
+              {getPriceError(String(form.price), { required: true })}
+            </p>
+          )}
         </div>
         <div className="flex flex-col gap-1.5">
           <label htmlFor="pe-oldprice" className="text-sm font-medium text-muted-foreground">
@@ -122,13 +137,29 @@ export function BasicInfoTab({ form, onChange }: BasicInfoTabProps) {
             type="number"
             min={0}
             step="0.01"
-            className="bg-surface-card border border-hairline-dark rounded-md px-3 py-2 text-sm text-body-text placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors"
+            inputMode="decimal"
+            className={`bg-surface-card border rounded-md px-3 py-2 text-sm text-body-text placeholder:text-muted-foreground outline-none transition-colors ${
+              form.oldPrice != null && getPriceError(String(form.oldPrice), { required: false })
+                ? 'border-price-rise focus:border-price-rise focus:ring-1 focus:ring-price-rise'
+                : 'border-hairline-dark focus:border-gold focus:ring-1 focus:ring-gold'
+            }`}
             placeholder="0"
             value={form.oldPrice ?? ''}
-            onChange={(e) =>
-              onChange('oldPrice', e.target.value ? parseFloat(e.target.value) : null)
-            }
+            onChange={(e) => {
+              const raw = e.target.value;
+              if (raw.startsWith('-')) return;
+              if (raw === '') {
+                onChange('oldPrice', null);
+              } else {
+                onChange('oldPrice', parsePriceSafe(raw));
+              }
+            }}
           />
+          {form.oldPrice != null && getPriceError(String(form.oldPrice), { required: false }) && (
+            <p className="text-xs text-price-rise">
+              {getPriceError(String(form.oldPrice), { required: false })}
+            </p>
+          )}
         </div>
       </div>
 
@@ -142,10 +173,19 @@ export function BasicInfoTab({ form, onChange }: BasicInfoTabProps) {
           type="number"
           min={0}
           step="1"
-          className="bg-surface-card border border-hairline-dark rounded-md px-3 py-2 text-sm text-body-text placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors"
+          inputMode="numeric"
+          className={`bg-surface-card border rounded-md px-3 py-2 text-sm text-body-text placeholder:text-muted-foreground outline-none transition-colors ${
+            getStockError(String(form.stock), { required: false })
+              ? 'border-price-rise focus:border-price-rise focus:ring-1 focus:ring-price-rise'
+              : 'border-hairline-dark focus:border-gold focus:ring-1 focus:ring-gold'
+          }`}
           placeholder="0"
           value={form.stock}
-          onChange={(e) => onChange('stock', parseInt(e.target.value, 10) || 0)}
+          onChange={(e) => {
+            const raw = e.target.value;
+            if (raw.startsWith('-')) return;
+            onChange('stock', raw === '' ? 0 : parseStockSafe(raw));
+          }}
         />
       </div>
 

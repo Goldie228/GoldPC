@@ -7,6 +7,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { wishlistApi } from '../api/wishlist';
+import { isAccessTokenValid } from '../utils/token';
 
 interface WishlistState {
   /** Массив ID товаров в списке желаний */
@@ -35,7 +36,7 @@ interface WishlistState {
 }
 
 function isAuthorizedSession(): boolean {
-  return Boolean(localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken'));
+  return isAccessTokenValid();
 }
 
 /**

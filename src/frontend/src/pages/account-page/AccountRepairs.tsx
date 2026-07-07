@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useServiceTickets } from '@/hooks/useServiceTickets';
 import { TICKET_STATUSES } from '@/api/services';
 import type { ServiceRequestDto } from '@/api/services';
-import { Wrench, Clock, CheckCircle, AlertCircle, Plus, RefreshCw } from 'lucide-react';
+import { Wrench, Clock, CheckCircle, AlertCircle, Plus, RefreshCw, MessageSquare } from 'lucide-react';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import type { StatusVariant } from '@/components/ui/StatusBadge';
 import { StatCard } from '@/components/ui/StatCard';
@@ -328,7 +328,16 @@ export function AccountRepairs() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center justify-between md:col-span-2 md:text-right">
+                  <div className="flex items-center justify-between md:col-span-2 md:text-right gap-2">
+                    {!TERMINAL_STATUSES.has(ticket.status) && ticket.masterId && (
+                      <Link
+                        to={`/my-repairs/${ticket.id}#chat`}
+                        className="inline-flex items-center gap-1.5 bg-gold/10 border border-gold/30 text-gold text-sm font-medium px-3 py-1.5 rounded-lg hover:bg-gold hover:text-gold-ink hover:border-gold transition-all"
+                      >
+                        <MessageSquare size={14} />
+                        Чат
+                      </Link>
+                    )}
                     <Link
                       to={`/my-repairs/${ticket.id}`}
                       className="inline-flex items-center gap-1.5 bg-elevated border border-border text-foreground text-sm font-medium px-3 py-1.5 rounded-lg hover:bg-gold hover:text-gold-ink hover:border-gold transition-all"

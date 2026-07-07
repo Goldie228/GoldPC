@@ -55,7 +55,7 @@ export function useServiceTickets(): UseServiceTicketsReturn {
     setLoading(true);
     setError(null);
     try {
-      return await servicesApi.getMyServiceRequests(page, pageSize);
+      return await servicesApi.getMyServiceRequests(page, pageSize, status);
     } catch (e) {
       const err = e instanceof Error ? e : new Error('Failed to fetch services');
       setError(err);

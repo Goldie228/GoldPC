@@ -204,17 +204,12 @@ free_port() {
         fi
     fi
 
-    # Вторая попытка: завершить процесс напрямую
-    local pids
-    pids=$(sudo lsof -i :"$port" -sTCP:LISTEN -t 2>/dev/null)
-    if [ -n "$pids" ]; then
-        for pid in $pids; do
-            local proc_name
-            proc_name=$(ps -p "$pid" -o comm= 2>/dev/null || echo "неизвестно")
-            log_warn "Порт $port занят $proc_name (PID $pid) — завершение..."
-            sudo kill "$pid" 2>/dev/null
-        done
-        sleep 1
+    # Вторая попытка: завершить процесс напрямую через fuser (работает даже с Tl-процессами)
+    local fuser_out
+    fuser_out=$(fuser -k -KILL "$port/tcp" 2>&1) || true
+    if [ -n "$fuser_out" ]; then
+        log_warn "Порт $port — fuser завершил процесс(ы): $fuser_out"
+        sleep 2
         if check_port "$port"; then
             log_ok "Порт $port освобождён"
             return 0

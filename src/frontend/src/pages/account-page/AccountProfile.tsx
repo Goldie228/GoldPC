@@ -24,6 +24,9 @@ export function AccountProfile() {
   const [activeModal, setActiveModal] = useState<SecurityModal>(null);
   const [avatarModalOpen, setAvatarModalOpen] = useState(false);
   const [avatarSaving, setAvatarSaving] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
+
+  useEffect(() => { setAvatarError(false); }, [user?.avatarUrl]);
 
   const [formData, setFormData] = useState({
     firstName: user?.firstName || '',
@@ -114,11 +117,12 @@ export function AccountProfile() {
           <div className="flex items-center gap-4">
             {/* Avatar with hover upload overlay */}
             <div className="relative shrink-0 group cursor-pointer" onClick={() => setAvatarModalOpen(true)}>
-              {user?.avatarUrl ? (
+              {user?.avatarUrl && !avatarError ? (
                 <img
                   src={user.avatarUrl}
                   alt="Аватар"
                   className="w-16 h-16 rounded-full object-cover border-2 border-border"
+                  onError={() => setAvatarError(true)}
                 />
               ) : (
                 <div className="w-16 h-16 rounded-full bg-elevated text-foreground text-xl font-bold flex items-center justify-center">

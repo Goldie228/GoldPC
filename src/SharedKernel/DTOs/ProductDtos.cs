@@ -352,6 +352,9 @@ public record ProductFilterDto
     /// <summary>Получает только рекомендуемые</summary>
     public bool? IsFeatured { get; init; }
 
+    /// <summary>Получает только товары с картинками (true — есть хотя бы одна, false — без картинок, null — все)</summary>
+    public bool? HasImages { get; init; }
+
     /// <summary>Получает фильтр по активности товара (true — активные, false — неактивные, null — все)</summary>
     public bool? IsActive { get; init; }
 

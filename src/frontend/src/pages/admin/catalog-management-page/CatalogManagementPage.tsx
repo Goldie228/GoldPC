@@ -9,7 +9,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { catalogAdminApi, type CreateProductRequest } from '@/api/admin';
 import { useToast } from '@/hooks/useToast';
 import { hasValidProductImage, getProductImageUrl } from '@/utils/image';
-import { CATEGORY_LABELS, CATEGORY_ORDER } from '@/utils/category-mappings';
+import { CATEGORY_LABELS, CATEGORY_ORDER, FRONTEND_TO_BACKEND } from '@/utils/category-mappings';
+import { getPriceError, getStockError, parsePriceSafe, parseStockSafe } from '@/utils/productValidation';
 import type { Product, ProductCategory } from '@/api/types';
 import {
   Package,
@@ -58,6 +59,7 @@ export function CatalogManagementPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<ProductCategory | ''>('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [hasImagesFilter, setHasImagesFilter] = useState<'all' | 'with' | 'without'>('all');
   const [pageSize, setPageSize] = useState<number>(10);
   const [page, setPage] = useState(1);
 
@@ -81,6 +83,11 @@ export function CatalogManagementPage() {
   // Drawer state (редактирование)
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
 
+  // Сбрасываем страницу при смене фильтра картинок
+  useEffect(() => {
+    setPage(1);
+  }, [hasImagesFilter]);
+
   // Modal state (только создание)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<ProductFormData>(EMPTY_FORM);
@@ -92,6 +99,8 @@ export function CatalogManagementPage() {
     ...(categoryFilter ? { category: categoryFilter } : {}),
     ...(searchQuery ? { search: searchQuery } : {}),
     ...(activeFilter !== 'all' ? { isActive: activeFilter === 'active' } : {}),
+    ...(hasImagesFilter === 'with' ? { hasImages: true } : {}),
+    ...(hasImagesFilter === 'without' ? { hasImages: false } : {}),
   };
 
   // Products query
@@ -161,12 +170,24 @@ export function CatalogManagementPage() {
   const handleSave = () => {
     if (!formData.name || !formData.category) return;
 
+    // Защита от отрицательной/невалидной цены и количества
+    const priceError = getPriceError(formData.price, { required: true });
+    if (priceError !== null) {
+      showToast(priceError, 'error');
+      return;
+    }
+    const stockError = getStockError(formData.stock, { required: false });
+    if (stockError !== null) {
+      showToast(stockError, 'error');
+      return;
+    }
+
     createMutation.mutate({
       name: formData.name,
       sku: `ADMIN-${Date.now()}`,
-      category: formData.category,
-      price: parseFloat(formData.price) || 0,
-      stock: parseInt(formData.stock, 10) || 0,
+      category: FRONTEND_TO_BACKEND[formData.category as keyof typeof FRONTEND_TO_BACKEND] ?? formData.category,
+      price: parsePriceSafe(formData.price),
+      stock: parseStockSafe(formData.stock),
       description: formData.description || undefined,
       isActive: formData.isActive,
     });
@@ -290,6 +311,22 @@ export function CatalogManagementPage() {
               <option value="all">Все</option>
               <option value="active">Активные</option>
               <option value="inactive">Неактивные</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Картинки
+            </label>
+            <select
+              className="px-3 py-2 pr-8 bg-surface-card border border-hairline-dark rounded-md text-sm text-body-text cursor-pointer appearance-none bg-[url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23707a8a%27 stroke-width=%272%27%3E%3Cpolyline points=%276 9 12 15 18 9%27/%3E%3C/svg%3E')] bg-no-repeat bg-[right_8px_center] focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors"
+              value={hasImagesFilter}
+              onChange={(e) => {
+                setHasImagesFilter(e.target.value as 'all' | 'with' | 'without');
+              }}
+            >
+              <option value="all">Все</option>
+              <option value="with">С картинками</option>
+              <option value="without">Без картинок</option>
             </select>
           </div>
           <ViewToggle viewMode={viewMode} onChange={setViewMode} />
@@ -609,18 +646,38 @@ export function CatalogManagementPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label htmlFor="price" className="text-sm font-medium text-muted-foreground">
-                    Цена (BYN)
+                    Цена (BYN) <span className="text-price-rise">*</span>
                   </label>
                   <input
                     id="price"
                     type="number"
                     min="0"
                     step="0.01"
-                    className="bg-surface-card border border-hairline-dark rounded-md px-3 py-2 text-sm text-body-text placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors"
+                    inputMode="decimal"
+                    className={`bg-surface-card border rounded-md px-3 py-2 text-sm text-body-text placeholder:text-muted-foreground outline-none transition-colors ${
+                      getPriceError(formData.price, { required: true })
+                        ? 'border-price-rise focus:border-price-rise focus:ring-1 focus:ring-price-rise'
+                        : 'border-hairline-dark focus:border-gold focus:ring-1 focus:ring-gold'
+                    }`}
                     placeholder="0"
                     value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    onChange={(e) => {
+                      // Блокируем ввод минуса и невалидных символов
+                      const raw = e.target.value;
+                      if (raw.startsWith('-')) return;
+                      setFormData({ ...formData, price: raw });
+                    }}
+                    onBlur={(e) => {
+                      // При потере фокуса — клампим к min=0
+                      const clamped = parsePriceSafe(e.target.value);
+                      setFormData({ ...formData, price: String(clamped) });
+                    }}
                   />
+                  {getPriceError(formData.price, { required: true }) && (
+                    <p className="text-xs text-price-rise">
+                      {getPriceError(formData.price, { required: true })}
+                    </p>
+                  )}
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label htmlFor="stock" className="text-sm font-medium text-muted-foreground">
@@ -631,11 +688,29 @@ export function CatalogManagementPage() {
                     type="number"
                     min="0"
                     step="1"
-                    className="bg-surface-card border border-hairline-dark rounded-md px-3 py-2 text-sm text-body-text placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors"
+                    inputMode="numeric"
+                    className={`bg-surface-card border rounded-md px-3 py-2 text-sm text-body-text placeholder:text-muted-foreground outline-none transition-colors ${
+                      getStockError(formData.stock, { required: false })
+                        ? 'border-price-rise focus:border-price-rise focus:ring-1 focus:ring-price-rise'
+                        : 'border-hairline-dark focus:border-gold focus:ring-1 focus:ring-gold'
+                    }`}
                     placeholder="0"
                     value={formData.stock}
-                    onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      if (raw.startsWith('-')) return;
+                      setFormData({ ...formData, stock: raw });
+                    }}
+                    onBlur={(e) => {
+                      const clamped = parseStockSafe(e.target.value);
+                      setFormData({ ...formData, stock: String(clamped) });
+                    }}
                   />
+                  {getStockError(formData.stock, { required: false }) && (
+                    <p className="text-xs text-price-rise">
+                      {getStockError(formData.stock, { required: false })}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -697,7 +772,13 @@ export function CatalogManagementPage() {
               </button>
               <button
                 onClick={handleSave}
-                disabled={isSaving || !formData.name || !formData.category}
+                disabled={
+                  isSaving ||
+                  !formData.name ||
+                  !formData.category ||
+                  getPriceError(formData.price, { required: true }) !== null ||
+                  getStockError(formData.stock, { required: false }) !== null
+                }
                 className="bg-gold text-gold-ink rounded-md px-4 py-2 text-sm font-semibold hover:bg-gold-active transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer inline-flex items-center gap-2"
               >
                 {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}

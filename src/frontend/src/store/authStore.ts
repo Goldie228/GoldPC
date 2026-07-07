@@ -4,6 +4,7 @@
 import { create } from 'zustand';
 import type { User } from '../api/types';
 import { decodeHtmlEntities } from '../utils/decodeHtml';
+import { isAccessTokenValid } from '../utils/token';
 import { mapBackendRole, normalizeUserRoles } from '../utils/roleMapper';
 
 export type UserRole = 'Client' | 'Manager' | 'Master' | 'Admin' | 'Accountant' | 'Courier';
@@ -34,10 +35,8 @@ const getInitialState = (): Pick<AuthState, 'user' | 'isAuthenticated' | 'curren
   try {
     const saved = localStorage.getItem('auth-storage');
 
-    // Проверяем, что токен реально существует
-    const hasToken = !!(
-      localStorage.getItem('accessToken') ?? sessionStorage.getItem('accessToken')
-    );
+    // Проверяем, что токен реально существует и ещё валиден (не истёк)
+    const hasToken = isAccessTokenValid();
 
     if (saved != null && saved !== '' && hasToken) {
       const data = JSON.parse(saved) as { user?: User | null };

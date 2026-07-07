@@ -13,7 +13,7 @@ namespace GoldPC.ServicesService.Services;
 public interface IServicesService
 {
     Task<ServiceRequestDto?> GetByIdAsync(Guid id);
-    Task<PagedResultServiceRequest> GetByClientIdAsync(Guid clientId, int page, int pageSize);
+    Task<PagedResultServiceRequest> GetByClientIdAsync(Guid clientId, int page, int pageSize, ServiceRequestStatus? status = null);
     Task<PagedResultServiceRequest> GetByMasterIdAsync(Guid masterId, int page, int pageSize);
     Task<PagedResultServiceRequest> GetAllAsync(int page, int pageSize, ServiceRequestStatus? status = null);
     Task<(ServiceRequestDto? Request, string? Error)> CreateAsync(Guid clientId, CreateServiceRequestRequest request);
@@ -84,12 +84,16 @@ public class ServicesService : IServicesService
         return request != null ? MapToDto(request) : null;
     }
 
-    public async Task<PagedResultServiceRequest> GetByClientIdAsync(Guid clientId, int page, int pageSize)
+    public async Task<PagedResultServiceRequest> GetByClientIdAsync(Guid clientId, int page, int pageSize, ServiceRequestStatus? status = null)
     {
         var query = _context.ServiceRequests
             .Include(sr => sr.ServiceType)
-            .Where(sr => sr.ClientId == clientId)
-            .OrderByDescending(sr => sr.CreatedAt);
+            .Where(sr => sr.ClientId == clientId);
+
+        if (status.HasValue)
+            query = query.Where(sr => sr.Status == status.Value);
+
+        query = query.OrderByDescending(sr => sr.CreatedAt);
 
         var totalCount = await query.CountAsync();
         var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();

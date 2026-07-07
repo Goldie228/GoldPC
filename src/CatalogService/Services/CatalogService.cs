@@ -116,6 +116,15 @@ public class CatalogService : ICatalogService
         return product != null ? MapToDetailDto(product) : null;
     }
 
+    /// <summary>
+    /// Получить детальный товар по ID без фильтра IsActive (для админки — редактирование неактивных товаров).
+    /// </summary>
+    public async Task<ProductDetailDto?> GetAdminProductByIdAsync(Guid id)
+    {
+        var product = await _productRepository.GetDetailByIdAdminAsync(id);
+        return product != null ? MapToDetailDto(product) : null;
+    }
+
     public async Task<ProductDetailDto?> GetProductBySlugAsync(string slug)
     {
         var normalized = slug?.Trim() ?? string.Empty;
@@ -213,6 +222,7 @@ public class CatalogService : ICatalogService
 
         var productSlug = await EnsureUniqueProductSlugAsync(dto.Slug, dto.Name);
 
+        // Товар без картинок автоматически неактивен (не отображается в storefront)
         var product = new Product
         {
             Name = dto.Name,
@@ -224,14 +234,29 @@ public class CatalogService : ICatalogService
             Price = dto.Price,
             Stock = dto.Stock,
             WarrantyMonths = dto.WarrantyMonths,
-            IsActive = dto.IsActive,
+            IsActive = false,
             IsFeatured = dto.IsFeatured
         };
 
         var created = await _productRepository.CreateAsync(product);
         if (dto.Specifications != null && dto.Specifications.Count > 0)
             await _productRepository.SetSpecificationsAsync(created.Id, dto.Specifications);
-        var result = (await GetProductByIdAsync(created.Id))!;
+
+        // Читаем из write-контекста, т.к. read-реплика (порт 5435) может отставать
+        var fullProduct = await _dbContext.Products
+            .Include(p => p.Category)
+            .Include(p => p.Manufacturer)
+            .Include(p => p.Images.OrderBy(i => i.SortOrder))
+            .Include(p => p.SpecificationValues)
+                .ThenInclude(s => s.Attribute)
+            .Include(p => p.SpecificationValues)
+                .ThenInclude(s => s.CanonicalValue)
+            .Include(p => p.Reviews.Where(r => r.IsVerified).OrderByDescending(r => r.CreatedAt))
+            .FirstOrDefaultAsync(p => p.Id == created.Id);
+
+        if (fullProduct == null)
+            throw new InvalidOperationException("Товар создан, но не найден при повторном чтении");
+        var result = MapToDetailDto(fullProduct);
         return isCategoryAutoDetected ? result with { IsCategoryAutoDetected = true } : result;
     }
 

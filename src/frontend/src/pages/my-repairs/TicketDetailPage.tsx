@@ -68,6 +68,14 @@ export function TicketDetailPage() {
     void load();
   }, [ticketId, showToast]);
 
+  // Scroll to chat section if URL has #chat
+  useEffect(() => {
+    if (!loading && window.location.hash === '#chat') {
+      const chatCard = document.querySelector('.chat-card');
+      chatCard?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [loading]);
+
   // Auto-scroll to bottom ONLY if user is already near the bottom
   useEffect(() => {
     if (messages.length === 0) return;
@@ -216,7 +224,7 @@ export function TicketDetailPage() {
         </div>
 
         {/* Chat Card */}
-        <div className="card chat-card">
+        <div id="chat" className="card chat-card">
           <div className="chat-card__header">
             <h2 className="section-title">Чат с техником</h2>
             {connectionStatus === 'connected' && <span className="chat-status chat-status--online" title="Подключено" />}

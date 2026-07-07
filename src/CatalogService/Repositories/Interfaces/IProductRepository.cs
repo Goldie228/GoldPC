@@ -13,6 +13,7 @@ public interface IProductRepository
     Task<Product?> GetBySkuAsync(string sku);
     Task<Product?> GetBySlugAsync(string slug);
     Task<Product?> GetDetailByIdAsync(Guid id);
+    Task<Product?> GetDetailByIdAdminAsync(Guid id);
     Task<Product?> GetDetailBySlugAsync(string slug);
     Task<RepositoryPagedResult<Product>> GetFilteredAsync(ProductFilterDto filter);
     Task<RepositoryPagedResult<Product>> GetFilteredAdminAsync(ProductFilterDto filter);

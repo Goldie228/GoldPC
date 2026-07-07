@@ -40,6 +40,8 @@ export function Header(): ReactElement {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cartFlash, setCartFlash] = useState(false);
+  const [avatarDropdownError, setAvatarDropdownError] = useState(false);
+  const [avatarMobileError, setAvatarMobileError] = useState(false);
   const prevCartCountRef = useRef(0);
   const location = useLocation();
 
@@ -47,6 +49,8 @@ export function Header(): ReactElement {
   const { items: wishlistItems } = useWishlist();
   const { items: comparisonItems } = useComparison();
   const { isAuthenticated, user, logout } = useAuth();
+
+  useEffect(() => { setAvatarDropdownError(false); setAvatarMobileError(false); }, [user?.avatarUrl]);
   const { openModal: _openModal, closeModal: _closeModal } = useModal();
 
   const wishlistCount = wishlistItems.length;
@@ -335,8 +339,8 @@ export function Header(): ReactElement {
                 ) : (
                   <>
                     <div className="flex items-center gap-3 p-4 bg-surface-elevated rounded-t-xl">
-                      {user?.avatarUrl ? (
-                        <img src={user.avatarUrl} alt="Аватар" className="w-11 h-11 rounded-full object-cover flex-shrink-0" width={44} height={44} loading="eager" />
+                      {user?.avatarUrl && !avatarDropdownError ? (
+                        <img src={user.avatarUrl} alt="Аватар" className="w-11 h-11 rounded-full object-cover flex-shrink-0" width={44} height={44} loading="eager" onError={() => setAvatarDropdownError(true)} />
                       ) : (
                         <div className="w-11 h-11 bg-gold rounded-full flex items-center justify-center text-gold-ink font-semibold text-lg uppercase flex-shrink-0">
                           {((decodeHtmlEntities(user?.firstName ?? '') ?? '') || (decodeHtmlEntities(user?.email ?? '') ?? ''))?.charAt(0) || 'U'}
@@ -515,8 +519,8 @@ export function Header(): ReactElement {
                     <>
                       {/* User Card */}
                       <div className="flex items-center gap-3 px-4 py-3 bg-surface-elevated">
-                        {user?.avatarUrl ? (
-                          <img src={user.avatarUrl} alt="Аватар" className="w-10 h-10 rounded-full object-cover flex-shrink-0" width={40} height={40} loading="lazy" />
+                        {user?.avatarUrl && !avatarMobileError ? (
+                          <img src={user.avatarUrl} alt="Аватар" className="w-10 h-10 rounded-full object-cover flex-shrink-0" width={40} height={40} loading="lazy" onError={() => setAvatarMobileError(true)} />
                         ) : (
                           <div className="w-10 h-10 bg-gold rounded-full flex items-center justify-center text-gold-ink font-semibold text-sm uppercase flex-shrink-0">
                             {(() => {

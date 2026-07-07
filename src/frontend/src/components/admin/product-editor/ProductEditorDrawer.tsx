@@ -113,6 +113,27 @@ export function ProductEditorDrawer({
     }
   }, [isOpen]);
 
+  // --- Валидация (цена и количество) ---
+  const priceError = useMemo(() => {
+    if (form.price < 0) return 'Цена не может быть отрицательной';
+    if (form.price > 999_999_999.99) return 'Цена слишком большая';
+    if (!Number.isFinite(form.price)) return 'Цена должна быть числом';
+    return null;
+  }, [form.price]);
+  const oldPriceError = useMemo(() => {
+    if (form.oldPrice == null) return null;
+    if (form.oldPrice < 0) return 'Старая цена не может быть отрицательной';
+    if (!Number.isFinite(form.oldPrice)) return 'Старая цена должна быть числом';
+    return null;
+  }, [form.oldPrice]);
+  const stockError = useMemo(() => {
+    if (form.stock < 0) return 'Количество не может быть отрицательным';
+    if (!Number.isInteger(form.stock)) return 'Количество должно быть целым';
+    if (form.stock > 1_000_000) return 'Количество слишком большое';
+    return null;
+  }, [form.stock]);
+  const hasValidationErrors = priceError !== null || oldPriceError !== null || stockError !== null;
+
   // --- Определение наличия изменений ---
   const hasChanges = useMemo(() => {
     if (!product) return false;
@@ -144,6 +165,10 @@ export function ProductEditorDrawer({
 
   const handleSave = useCallback(() => {
     if (!productId || !product) return;
+    if (hasValidationErrors) {
+      showToast(priceError ?? oldPriceError ?? stockError ?? 'Проверьте корректность полей', 'error');
+      return;
+    }
     saveMutation.mutate({
       id: productId,
       data: {
@@ -156,7 +181,7 @@ export function ProductEditorDrawer({
         specifications: form.specifications,
       },
     });
-  }, [productId, product, form, saveMutation]);
+  }, [productId, product, form, saveMutation, hasValidationErrors, priceError, oldPriceError, stockError, showToast]);
 
   // --- Обработчик изменения формы ---
   const handleFormChange = useCallback(
@@ -322,9 +347,9 @@ export function ProductEditorDrawer({
               <button
                 type="button"
                 onClick={handleSave}
-                disabled={isSaving || isLoading || !hasChanges}
+                disabled={isSaving || isLoading || !hasChanges || hasValidationErrors}
                 className="inline-flex items-center gap-2 bg-gold text-black hover:bg-gold-active rounded-md px-3 py-2 text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                title="Сохранить (⌘S)"
+                title={hasValidationErrors ? (priceError ?? oldPriceError ?? stockError ?? 'Проверьте корректность полей') : 'Сохранить (⌘S)'}
               >
                 {isSaving ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -364,6 +389,18 @@ export function ProductEditorDrawer({
             <p className="text-xs text-muted-foreground">
               Проверьте ID товара и попробуйте снова
             </p>
+          </div>
+        )}
+
+        {/* Баннер ошибок валидации */}
+        {hasValidationErrors && !isLoading && !isError && product && (
+          <div className="mx-6 mt-4 p-3 bg-price-rise/10 border border-price-rise/30 rounded-md">
+            <p className="text-sm font-medium text-price-rise mb-1">Исправьте ошибки:</p>
+            <ul className="text-xs text-price-rise space-y-0.5 list-disc list-inside">
+              {priceError && <li>Цена: {priceError}</li>}
+              {oldPriceError && <li>Старая цена: {oldPriceError}</li>}
+              {stockError && <li>Количество: {stockError}</li>}
+            </ul>
           </div>
         )}
 

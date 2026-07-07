@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, NavLink, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -33,6 +33,9 @@ export function AccountLayout() {
   const { user, currentRole } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
+
+  useEffect(() => { setAvatarError(false); }, [user?.avatarUrl]);
 
   const sidebarWidth = collapsed ? 'w-[68px]' : 'w-[280px]';
 
@@ -116,11 +119,12 @@ const navItems: NavItem[] = [
 
         {/* User profile section */}
         <div className={`flex flex-col items-center gap-2 pt-12 pb-6 border-b border-hairline-dark transition-all duration-300 ${collapsed ? 'px-2' : 'px-6'}`}>
-          {user?.avatarUrl ? (
+          {user?.avatarUrl && !avatarError ? (
             <img
               src={user.avatarUrl}
               alt="Аватар"
               className={`rounded-full object-cover border-2 border-gold shrink-0 transition-all duration-300 ${collapsed ? 'w-10 h-10' : 'w-14 h-14'}`}
+              onError={() => setAvatarError(true)}
             />
           ) : (
             <div className={`rounded-full bg-gold text-gold-ink flex items-center justify-center font-bold shrink-0 transition-all duration-300 ${collapsed ? 'w-10 h-10 text-sm' : 'w-14 h-14 text-lg'}`}>

@@ -44,20 +44,7 @@ export const ProductCard = memo(function ProductCard({ product, onEdit, onDelete
   };
 
   return (
-    <div
-      className={`relative bg-surface-card rounded-lg border border-hairline-dark overflow-hidden flex flex-col flex-1 ${
-        !product.isActive ? 'opacity-60' : ''
-      }`}
-    >
-      {/* Оверлей для неактивного товара */}
-      {!product.isActive && (
-        <div className="absolute inset-0 bg-black/40 z-10 flex items-center justify-center rounded-lg">
-          <span className="px-2 py-0.5 rounded-sm text-xs bg-price-rise/15 text-price-rise font-medium">
-            Неактивен
-          </span>
-        </div>
-      )}
-
+    <div className="relative bg-surface-card rounded-lg border border-hairline-dark overflow-hidden flex flex-col flex-1">
       {/* Индикатор кликабельности */}
       <div className="absolute top-3 right-3 z-10 text-muted-foreground/50">
         <ChevronRight className="w-4 h-4" />

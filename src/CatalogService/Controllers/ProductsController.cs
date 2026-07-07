@@ -321,6 +321,7 @@ public class AdminCatalogController : ControllerBase
         [FromQuery] int pageSize = 10,
         [FromQuery] string? category = null,
         [FromQuery] bool? isActive = null,
+        [FromQuery] bool? hasImages = null,
         [FromQuery] string? search = null)
     {
         var filter = new ProductFilterDto
@@ -329,11 +330,28 @@ public class AdminCatalogController : ControllerBase
             PageSize = pageSize,
             Category = category,
             IsActive = isActive,
+            HasImages = hasImages,
             Search = search
         };
 
         var result = await _catalogService.GetAdminProductsAsync(filter);
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Получить товар по ID для админки (без фильтра IsActive — позволяет редактировать неактивные товары).
+    /// </summary>
+    [HttpGet("products/{productId:guid}")]
+    [ProducesResponseType(typeof(ProductDetailDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ProductDetailDto>> GetAdminProduct(Guid productId)
+    {
+        var product = await _catalogService.GetAdminProductByIdAsync(productId);
+        if (product == null)
+        {
+            return NotFound(new { error = "Товар не найден", productId });
+        }
+        return Ok(product);
     }
 
     /// <summary>
@@ -344,6 +362,19 @@ public class AdminCatalogController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ProductDetailDto>> CreateProduct([FromBody] CreateProductDto dto)
     {
+        // Защита от невалидных значений (фронт тоже валидирует, но мы не доверяем клиенту)
+        if (dto.Price < 0)
+        {
+            return BadRequest(new { error = "Цена не может быть отрицательной" });
+        }
+        if (dto.Price > 999_999_999.99m)
+        {
+            return BadRequest(new { error = "Цена слишком большая (максимум 999 999 999.99)" });
+        }
+        if (dto.Stock < 0)
+        {
+            return BadRequest(new { error = "Количество не может быть отрицательным" });
+        }
         try
         {
             var product = await _catalogService.CreateProductAsync(dto);
@@ -352,6 +383,11 @@ public class AdminCatalogController : ControllerBase
         catch (InvalidOperationException ex)
         {
             return BadRequest(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при создании товара");
+            return StatusCode(500, new { error = "Внутренняя ошибка сервера при создании товара" });
         }
     }
 
@@ -363,6 +399,26 @@ public class AdminCatalogController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ProductDetailDto>> UpdateProduct(Guid productId, [FromBody] UpdateProductDto dto)
     {
+        // Защита от невалидных значений
+        if (dto.Price.HasValue)
+        {
+            if (dto.Price.Value < 0)
+            {
+                return BadRequest(new { error = "Цена не может быть отрицательной" });
+            }
+            if (dto.Price.Value > 999_999_999.99m)
+            {
+                return BadRequest(new { error = "Цена слишком большая (максимум 999 999 999.99)" });
+            }
+        }
+        if (dto.Stock.HasValue && dto.Stock.Value < 0)
+        {
+            return BadRequest(new { error = "Количество не может быть отрицательным" });
+        }
+        if (dto.OldPrice.HasValue && dto.OldPrice.Value < 0)
+        {
+            return BadRequest(new { error = "Старая цена не может быть отрицательной" });
+        }
         var product = await _catalogService.UpdateProductAsync(productId, dto);
         if (product == null)
         {

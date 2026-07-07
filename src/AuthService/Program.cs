@@ -249,6 +249,28 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Avatar fallback - serves a default SVG when the requested avatar file doesn't exist
+app.UseWhen(ctx => ctx.Request.Path.StartsWithSegments("/uploads/avatars", StringComparison.OrdinalIgnoreCase), appBuilder =>
+{
+    appBuilder.Use(async (context, next) =>
+    {
+        await next();
+        if (context.Response.StatusCode == 404)
+        {
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", context.Request.Path.Value?.TrimStart('/') ?? "");
+            if (!File.Exists(filePath))
+            {
+                context.Response.StatusCode = 200;
+                context.Response.ContentType = "image/svg+xml";
+                await context.Response.WriteAsync(
+                    """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="50" fill="#e2e8f0"/><text x="50" y="50" dominant-baseline="central" text-anchor="middle" font-size="36" font-weight="bold" fill="#94a3b8">?</text></svg>"""
+                );
+            }
+        }
+    });
+});
+
 app.UseStaticFiles();
 app.UseCors();
 app.UseRateLimiter();

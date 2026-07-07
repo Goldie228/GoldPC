@@ -311,6 +311,7 @@ export const catalogAdminApi = {
     category?: string;
     search?: string;
     isActive?: boolean;
+    hasImages?: boolean;
   }): Promise<PagedResponse<Product>> {
     try {
       // Маппим frontend slug → backend slug для фильтрации (CatalogService ожидает slug категории)

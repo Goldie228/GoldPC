@@ -465,7 +465,7 @@ getAddresses()
                 </div>
 
                 {deliveryData.method === 'Delivery' && user && savedAddresses.length > 0 && (
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-2 mt-3">
                     <label htmlFor="checkout-saved-addresses" className="text-[0.75rem] font-medium text-muted-foreground uppercase tracking-[0.05em]">Сохранённые адреса</label>
                     <select
                       id="checkout-saved-addresses"

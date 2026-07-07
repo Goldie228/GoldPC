@@ -22,15 +22,19 @@ public class CatalogServiceClient : ICatalogServiceClient
     // ====================================================================
     // Товары
     // ====================================================================
-    public async Task<PagedResult<ProductListDto>> GetProductsAsync(int page, int pageSize, string? category, bool? isActive, string? search = null)
+    public async Task<PagedResult<ProductListDto>> GetProductsAsync(int page, int pageSize, string? category, bool? isActive, bool? hasImages = null, string? search = null)
     {
         try
         {
-            var query = $"api/v1/catalog/products?page={page}&pageSize={pageSize}";
+            // Используем admin endpoint CatalogService, который уважает фильтр IsActive
+            // (публичный /api/v1/catalog/products хардкодит Where(p => p.IsActive) и игнорирует параметр)
+            var query = $"api/v1/admin/products?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(category))
                 query += $"&category={Uri.EscapeDataString(category)}";
             if (isActive.HasValue)
                 query += $"&isActive={isActive.Value}";
+            if (hasImages.HasValue)
+                query += $"&hasImages={hasImages.Value}";
             if (!string.IsNullOrEmpty(search))
                 query += $"&search={Uri.EscapeDataString(search)}";
 
@@ -53,7 +57,10 @@ public class CatalogServiceClient : ICatalogServiceClient
         {
             _logger.LogDebug("GetProductByIdAsync: {ProductId}", id);
 
-            var response = await _http.GetAsync(new Uri($"api/v1/catalog/products/{id}", UriKind.Relative));
+            // Используем admin endpoint CatalogService, который возвращает товар без фильтра IsActive
+            // (публичный /api/v1/catalog/products/{id} возвращает 404 для неактивных товаров,
+            // что мешает админу их редактировать)
+            var response = await _http.GetAsync(new Uri($"api/v1/admin/products/{id}", UriKind.Relative));
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 return null;
 
@@ -74,14 +81,23 @@ public class CatalogServiceClient : ICatalogServiceClient
             _logger.LogInformation("CreateProductAsync: {Name}", dto.Name);
 
             var response = await _http.PostAsJsonAsync(new Uri("api/v1/admin/products", UriKind.Relative), dto);
-            response.EnsureSuccessStatusCode();
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorBody = await response.Content.ReadAsStringAsync();
+                _logger.LogError("CatalogService вернул {StatusCode} при создании товара: {Error}", response.StatusCode, errorBody);
+                throw new InvalidOperationException($"Ошибка сервиса каталога: {errorBody}");
+            }
             return (await response.Content.ReadFromJsonAsync<ProductDetailDto>())
                 ?? throw new InvalidOperationException("Пустой ответ при создании товара");
         }
+        catch (InvalidOperationException)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error calling CatalogService CreateProduct");
-            throw;
+            _logger.LogError(ex, "Ошибка вызова CatalogService CreateProduct");
+            throw new InvalidOperationException("Сервис каталога временно недоступен", ex);
         }
     }
 

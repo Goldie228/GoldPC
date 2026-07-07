@@ -156,9 +156,10 @@ export const servicesApi = {
   getMyServiceRequests: async (
     page: number = 1,
     pageSize: number = 10,
+    status?: string,
   ): Promise<{ items: ServiceRequestDto[]; totalCount: number }> => {
     try {
-      const response = await goldpcApi.getServicesMy({ page, pageSize });
+      const response = await goldpcApi.getServicesMy({ page, pageSize, status });
       return extractData<{ items: ServiceRequestDto[]; totalCount: number }>(response);
     } catch (e) {
       throw new Error('Failed to fetch my service requests: ' + (e instanceof Error ? e.message : String(e)));
